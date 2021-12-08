@@ -4,7 +4,7 @@ These are my solutions for the Damn-Vulnerable-Defi challenges.
 Solved:
 - :black_large_square: [Unstoppable](test/unstoppable/unstoppable.challenge.js)
 - :black_large_square: [Naive receiver](test/naive-receiver/naive-receiver.challenge.js)
-- :white_medium_square: [Truster]()
+- :black_large_square: [Truster](test/truster/truster.challenge.js)
 - :white_medium_square: [Side entrance]()
 - :white_medium_square: [The rewarder]()
 - :white_medium_square: [Selfie]()
@@ -23,7 +23,7 @@ yarn run {challenge_folder_name_from_the_test_folder}
 ```
 
 eg.
-````
+```
 yarn run unstoppable
 ```
 Created by [@tinchoabbate](https://twitter.com/tinchoabbate)

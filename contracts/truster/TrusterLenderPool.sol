@@ -33,7 +33,13 @@ contract TrusterLenderPool is ReentrancyGuard {
         require(balanceBefore >= borrowAmount, "Not enough tokens in pool");
         
         damnValuableToken.transfer(borrower, borrowAmount);
+        // @audit-info : maybe if this fails, the transfer will still work, however, the borrower will not want to repay the loan.
+        // @audit : this was indeed the issue; the attacker could call the flashLoan(0) function to send it to the target/
+        
         target.functionCall(data);
+        // @audit : the target can be the `token` and you can call it's approve function, such that the pool will approve a transfer worth of
+        // the entire pool's balance to the target. Without the require on line 45, the exploit could have triggered as I have initially thought
+        // (through the use of a gimmick contract, that would simply accept the payment but not do anything with it).
 
         uint256 balanceAfter = damnValuableToken.balanceOf(address(this));
         require(balanceAfter >= balanceBefore, "Flash loan hasn't been paid back");
