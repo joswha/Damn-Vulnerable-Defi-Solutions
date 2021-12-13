@@ -6,7 +6,7 @@ Solved:
 - :black_large_square: [Naive receiver](test/naive-receiver/naive-receiver.challenge.js)
 - :black_large_square: [Truster](test/truster/truster.challenge.js)
 - :black_large_square: [Side entrance](test/side-entrance/side-entrance.challenge.js)
-- :white_medium_square: [The rewarder](#)
+- :black_large_square: [The rewarder](test/the-rewarder/the-rewarder.challenge.js)
 - :white_medium_square: [Selfie](#)
 - :white_medium_square: [Compromised](#)
 - :white_medium_square: [Puppet](#)

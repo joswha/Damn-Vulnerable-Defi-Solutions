@@ -52,6 +52,7 @@ contract TheRewarderPool {
         accToken.mint(msg.sender, amountToDeposit);
         distributeRewards();
 
+        //@audit-info we have to get liquidToken back; have to pay the lender.
         require(
             liquidityToken.transferFrom(msg.sender, address(this), amountToDeposit)
         );
@@ -59,6 +60,8 @@ contract TheRewarderPool {
 
     function withdraw(uint256 amountToWithdraw) external {
         accToken.burn(msg.sender, amountToWithdraw);
+
+        //@audit-info this is how to get them back. 
         require(liquidityToken.transfer(msg.sender, amountToWithdraw));
     }
 

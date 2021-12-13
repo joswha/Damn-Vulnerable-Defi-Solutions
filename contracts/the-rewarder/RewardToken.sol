@@ -23,4 +23,6 @@ contract RewardToken is ERC20, AccessControl {
         require(hasRole(MINTER_ROLE, msg.sender));
         _mint(to, amount);
     }
+
+    //@audit-info use transferFrom that is inherited on this contract?
 }

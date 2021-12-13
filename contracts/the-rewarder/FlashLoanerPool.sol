@@ -22,6 +22,7 @@ contract FlashLoanerPool is ReentrancyGuard {
         liquidityToken = DamnValuableToken(liquidityTokenAddress);
     }
 
+    // @audit-info dealing with DamnValuableTokens
     function flashLoan(uint256 amount) external nonReentrant {
         uint256 balanceBefore = liquidityToken.balanceOf(address(this));
         require(amount <= balanceBefore, "Not enough token balance");
@@ -30,6 +31,7 @@ contract FlashLoanerPool is ReentrancyGuard {
         
         liquidityToken.transfer(msg.sender, amount);
 
+        // @audit-info calls my function
         msg.sender.functionCall(
             abi.encodeWithSignature(
                 "receiveFlashLoan(uint256)",
@@ -37,6 +39,7 @@ contract FlashLoanerPool is ReentrancyGuard {
             )
         );
 
+        //@audit-info has to be within the same tx; can't deposit and then wait 5 days and then send back
         require(liquidityToken.balanceOf(address(this)) >= balanceBefore, "Flash loan not paid back");
     }
 }
