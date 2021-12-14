@@ -49,6 +49,7 @@ contract SelfiePool is ReentrancyGuard {
         require(balanceAfter >= balanceBefore, "Flash loan hasn't been paid back");
     }
 
+    //@audit : this can be called via the governance.
     function drainAllFunds(address receiver) external onlyGovernance {
         uint256 amount = token.balanceOf(address(this));
         token.transfer(receiver, amount);

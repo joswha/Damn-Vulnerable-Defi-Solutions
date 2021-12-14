@@ -59,6 +59,8 @@ contract SimpleGovernance {
         GovernanceAction storage actionToExecute = actions[actionId];
         actionToExecute.executedAt = block.timestamp;
 
+        //@audit-info calls the function described within the `actionToExecute` obj.
+        //@audit-info we can call drainAllFunds through this, and it will be accepted since this is the governor of the pool.
         actionToExecute.receiver.functionCallWithValue(
             actionToExecute.data,
             actionToExecute.weiAmount
@@ -76,6 +78,7 @@ contract SimpleGovernance {
      * 1) it's never been executed before and
      * 2) enough time has passed since it was first proposed
      */
+     // @audit-info pass the time after the loan + queue the action.!!!!!! 
     function _canBeExecuted(uint256 actionId) private view returns (bool) {
         GovernanceAction memory actionToExecute = actions[actionId];
         return (
@@ -85,8 +88,12 @@ contract SimpleGovernance {
     }
     
     function _hasEnoughVotes(address account) private view returns (bool) {
+
+        //@audit-info this failed bc "snapshot-id = 0"; token.snapshot(); can be called for that
         uint256 balance = governanceToken.getBalanceAtLastSnapshot(account);
         uint256 halfTotalSupply = governanceToken.getTotalSupplyAtLastSnapshot() / 2;
+
+        //@audit-info my balance > half of total governance token supply if I take a loan.
         return balance > halfTotalSupply;
     }
 }

