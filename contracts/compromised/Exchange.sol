@@ -36,6 +36,7 @@ contract Exchange is ReentrancyGuard {
 
         uint256 tokenId = token.safeMint(msg.sender);
         
+        //@audit-info sends back the excess amount of wei?
         payable(msg.sender).sendValue(amountPaidInWei - currentPriceInWei);
 
         emit TokenBought(msg.sender, tokenId, currentPriceInWei);
@@ -45,6 +46,8 @@ contract Exchange is ReentrancyGuard {
 
     function sellOne(uint256 tokenId) external nonReentrant {
         require(msg.sender == token.ownerOf(tokenId), "Seller must be the owner");
+
+        //@audit-info checks that it's aproved to be sent to Exchange.
         require(token.getApproved(tokenId) == address(this), "Seller must have approved transfer");
 
         // Price should be in [wei / NFT]
@@ -54,6 +57,7 @@ contract Exchange is ReentrancyGuard {
         token.transferFrom(msg.sender, address(this), tokenId);
         token.burn(tokenId);
         
+        //@audit-info Sends the value of the token to the seller(me); probably the oracle has to be inflated, so that we get all its money for the NFT we sell.
         payable(msg.sender).sendValue(currentPriceInWei);
 
         emit TokenSold(msg.sender, tokenId, currentPriceInWei);

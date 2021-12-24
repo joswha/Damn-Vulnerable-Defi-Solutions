@@ -8,7 +8,7 @@ Solved:
 - :black_large_square: [Side entrance](test/side-entrance/side-entrance.challenge.js)
 - :black_large_square: [The rewarder](test/the-rewarder/the-rewarder.challenge.js)
 - :black_large_square: [Selfie](test/selfie/selfie.challenge.js)
-- :white_medium_square: [Compromised](#)
+- :black_large_square: [Compromised](test/compromised/compromised/challenge.js)
 - :white_medium_square: [Puppet](#)
 - :white_medium_square: [Puppet v2](#)
 - :white_medium_square: [Free rider](#)
