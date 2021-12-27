@@ -15,7 +15,7 @@ Solved:
 - :white_medium_square: [Backdoor](#)
 - :white_medium_square: [Climber](#)
 
-To view my notes regarding the solutions, [visit this Notion page](https://enormous-sundial-6ef.notion.site/Damn-Vulnerable-DeFi-3c29e8b2a65742f799367eeced1b4059).
+To view my notes regarding the solutions, [visit this Notion page](https://vladtoie.notion.site/Damn-Vulnerable-DeFi-3c29e8b2a65742f799367eeced1b4059).
 
 ## Info
 
