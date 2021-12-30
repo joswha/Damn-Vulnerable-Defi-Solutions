@@ -69,6 +69,35 @@ contract PuppetV2Pool {
         (uint256 reservesWETH, uint256 reservesToken) = UniswapV2Library.getReserves(
             _uniswapFactory, address(_weth), address(_token)
         );
+        // calculate the price based on tokens from reserves.
+        // @audit the issue was here:
+        // reservesToken goes UP while reservesWETH goes DOWN. arithmetics: 1000000 * res_weth * 3 / res_tok
         return UniswapV2Library.quote(amount.mul(10 ** 18), reservesToken, reservesWETH);
     }
+
+    // @audit-info : displaying purposes only
+    function getOracle() public view returns(uint256, uint256) {
+        (uint256 reservesWETH, uint256 reservesToken) = UniswapV2Library.getReserves(
+            _uniswapFactory, address(_weth), address(_token)
+        );
+        return (reservesWETH, reservesToken);
+    } 
 }
+
+/*
+1. One could swap DVT into WETH. That won't provide enough WETH to borrow.
+	CURR WETH 9.9
+	Reserved WETH 0.09930486593843098
+	Reserved TOK 10099.999999999998
+	
+	>>> 1000000 * res_weth * 3 / res_tok 
+	29.4059697088809
+2. Transform ETH to WETH, and get the req 29.4 - 9.9 WETH, and then borrow the 1000000 DVT.
+
+https://github.com/Uniswap/v2-periphery/blob/master/contracts/libraries/UniswapV2Library.sol
+https://github.com/Uniswap/v2-core/blob/master/contracts/UniswapV2Pair.sol
+https://github.com/Uniswap/v2-periphery/blob/master/contracts/UniswapV2Router02.sol
+
+Reserves get updated via the _update method, used in mint(), burn(), swap() and proabably the needed sync()!!
+what about skim()??? 
+*/

