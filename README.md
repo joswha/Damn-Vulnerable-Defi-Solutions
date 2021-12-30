@@ -10,7 +10,7 @@ Solved:
 - :black_large_square: [Selfie](test/selfie/selfie.challenge.js)
 - :black_large_square: [Compromised](test/compromised/compromised.challenge.js)
 - :black_large_square: [Puppet](test/puppet/puppet.challenge.js)
-- :white_medium_square: [Puppet v2](#)
+- :black_large_square: [Puppet v2](test/puppet-v2/puppet-v2.challenge.js)
 - :white_medium_square: [Free rider](#)
 - :white_medium_square: [Backdoor](#)
 - :white_medium_square: [Climber](#)

@@ -41,6 +41,7 @@ contract FreeRiderNFTMarketplace is ReentrancyGuard {
     function _offerOne(uint256 tokenId, uint256 price) private {
         require(price > 0, "Price must be greater than zero");
 
+        // @audit-info msg.sender != owner check here. what if msg.sender != tx.origin? contract bid on its own tokens, although attacker == msg.sender
         require(
             msg.sender == token.ownerOf(tokenId),
             "Account offering must be the owner"
@@ -65,6 +66,7 @@ contract FreeRiderNFTMarketplace is ReentrancyGuard {
         }
     }
 
+    // @audit-info doesn't check msg.sender != owner. checked above ^
     function _buyOne(uint256 tokenId) private {       
         uint256 priceToPay = offers[tokenId];
         require(priceToPay > 0, "Token is not being offered");
@@ -76,6 +78,7 @@ contract FreeRiderNFTMarketplace is ReentrancyGuard {
         // transfer from seller to buyer
         token.safeTransferFrom(token.ownerOf(tokenId), msg.sender, tokenId);
 
+        // @audit-info if I manage to get only one token, I can keep on buying my own NFT, paying me back over and over; need to somehow lend enough ETH.
         // pay seller
         payable(token.ownerOf(tokenId)).sendValue(priceToPay);
 
