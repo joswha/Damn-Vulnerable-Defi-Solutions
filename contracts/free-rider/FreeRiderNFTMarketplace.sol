@@ -66,7 +66,6 @@ contract FreeRiderNFTMarketplace is ReentrancyGuard {
         }
     }
 
-    // @audit-info doesn't check msg.sender != owner. checked above ^
     function _buyOne(uint256 tokenId) private {       
         uint256 priceToPay = offers[tokenId];
         require(priceToPay > 0, "Token is not being offered");
@@ -75,12 +74,15 @@ contract FreeRiderNFTMarketplace is ReentrancyGuard {
 
         amountOfOffers--;
 
-        // transfer from seller to buyer
+        // @audit 1. transfer from seller to buyer; issue since we become the "seller"
         token.safeTransferFrom(token.ownerOf(tokenId), msg.sender, tokenId);
 
-        // @audit-info if I manage to get only one token, I can keep on buying my own NFT, paying me back over and over; need to somehow lend enough ETH.
+        // @audit-info if I manage to get only one token, I can keep on paying myself for the NFT.
+
         // pay seller
+        // @audit 2. but we're basically the seller since the NFT has been transferred to us at line 79.
         payable(token.ownerOf(tokenId)).sendValue(priceToPay);
+        // we essentially receive the money we payed for the NFT, so on.
 
         emit NFTBought(msg.sender, tokenId, priceToPay);
     }    

