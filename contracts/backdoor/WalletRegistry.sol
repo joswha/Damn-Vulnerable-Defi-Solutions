@@ -67,20 +67,26 @@ contract WalletRegistry is IProxyCreationCallback, Ownable {
         // Make sure we have enough DVT to pay
         require(token.balanceOf(address(this)) >= TOKEN_PAYMENT, "Not enough funds to pay");
 
+        // 1. @audit-info address of the deployed wallet.
         address payable walletAddress = payable(proxy);
 
         // Ensure correct factory and master copy
+        // 2. @audit-info should be called by the factory
         require(msg.sender == walletFactory, "Caller must be factory");
+
+        // @audit-info what is this?
         require(singleton == masterCopy, "Fake mastercopy used");
         
         // Ensure initial calldata was a call to `GnosisSafe::setup`
         require(bytes4(initializer[:4]) == GnosisSafe.setup.selector, "Wrong initialization");
 
         // Ensure wallet initialization is the expected
+        // 3. @audit-ok some random checks? 
         require(GnosisSafe(walletAddress).getThreshold() == MAX_THRESHOLD, "Invalid threshold");
         require(GnosisSafe(walletAddress).getOwners().length == MAX_OWNERS, "Invalid number of owners");       
 
         // Ensure the owner is a registered beneficiary
+        // 4. @audit-info owner at index 0 !!! of wallet has to be the one we call for
         address walletOwner = GnosisSafe(walletAddress).getOwners()[0];
 
         require(beneficiaries[walletOwner], "Owner is not registered as beneficiary");
@@ -95,3 +101,6 @@ contract WalletRegistry is IProxyCreationCallback, Ownable {
         token.transfer(walletAddress, TOKEN_PAYMENT);        
     }
 }
+// !!. https://blog.openzeppelin.com/backdooring-gnosis-safe-multisig-wallets/
+
+// which implements the following: https://gist.github.com/tinchoabbate/4b8be18615c4f4a4049280c014327652
