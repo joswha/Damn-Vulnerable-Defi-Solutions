@@ -35,6 +35,7 @@ contract ClimberVault is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         __UUPSUpgradeable_init();
 
         // Deploy timelock and transfer ownership to it
+        // @audit-info the ClimberTimelock has total ownership of this contract.
         transferOwnership(address(new ClimberTimelock(admin, proposer)));
 
         _setSweeper(sweeper);
@@ -77,4 +78,5 @@ contract ClimberVault is Initializable, OwnableUpgradeable, UUPSUpgradeable {
 
     // By marking this internal function with `onlyOwner`, we only allow the owner account to authorize an upgrade
     function _authorizeUpgrade(address newImplementation) internal onlyOwner override {}
+    // @audit-info need to add this to the malicious vault ffs
 }

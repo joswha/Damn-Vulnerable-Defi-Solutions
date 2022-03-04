@@ -45,6 +45,7 @@ contract ClimberTimelock is AccessControl {
         _setupRole(ADMIN_ROLE, admin);
         _setupRole(ADMIN_ROLE, address(this));
 
+        // @audit-info can call the _setupRole on address(this) such that we give the attacker the proposer role?
         _setupRole(PROPOSER_ROLE, proposer);
     }
 
@@ -100,16 +101,21 @@ contract ClimberTimelock is AccessControl {
         require(targets.length == dataElements.length);
 
         bytes32 id = getOperationId(targets, values, dataElements, salt);
-
+        
+        // @audit-info can call on target ClimberVault its admin-only functions
+        // since timelock is vault's owner.
         for (uint8 i = 0; i < targets.length; i++) {
             targets[i].functionCallWithValue(dataElements[i], values[i]);
         }
         
+        // @audit-info this can be tricked, since the for loop above executes first before checking
         require(getOperationState(id) == OperationState.ReadyForExecution);
+        // @audit-info maybe execute something and then schedule it to pass the check?
         operations[id].executed = true;
     }
 
     function updateDelay(uint64 newDelay) external {
+        // @audit-info can reset the delay if called by this
         require(msg.sender == address(this), "Caller must be timelock itself");
         require(newDelay <= 14 days, "Delay must be 14 days or less");
         delay = newDelay;

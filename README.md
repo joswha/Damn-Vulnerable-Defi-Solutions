@@ -13,7 +13,7 @@ Solved:
 - :black_large_square: [Puppet v2](test/puppet-v2/puppet-v2.challenge.js)
 - :black_large_square: [Free rider](test/free-rider/free-rider.challenge.js)
 - :black_large_square: [Backdoor](test/backdoor/backdoor.challenge.js)
-- :white_medium_square: [Climber](#)
+- :black_large_square: [Climber](test/climber/climber.challenge.js)
 
 To view my notes regarding the solutions, [visit this Notion page](https://vladtoie.notion.site/Damn-Vulnerable-DeFi-3c29e8b2a65742f799367eeced1b4059).
 
